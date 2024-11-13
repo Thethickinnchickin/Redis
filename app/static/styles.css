@@ -61,6 +61,17 @@ a:hover {
     text-decoration: underline;
 }
 
+.resend-button {
+    background-color: #f0f0f0;
+    color: #0071e3;
+    border: 1px solid #0071e3;
+}
+
+.resend-button:hover {
+    background-color: #0071e3;
+    color: #ffffff;
+}
+
 /* Base Flash Message Styles */
 .flash-messages {
     position: fixed;
@@ -127,5 +138,23 @@ a:hover {
 }
 
 .success-message .button:hover {
+    background-color: #005bb5;
+}
+
+/* styles.css */
+.back-to-home {
+    position: absolute;
+    top: 20px;
+    left: 20px; /* Change from right to left for top-left positioning */
+    padding: 10px 15px;
+    background-color: #0071e3;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.back-to-home:hover {
     background-color: #005bb5;
 }

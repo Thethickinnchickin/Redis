@@ -1,0 +1,42 @@
+<!-- templates/two_factor.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter 2FA Code</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Two-Factor Authentication</h1>
+        <p>Enter the code sent to your email to complete the login process.</p>
+
+        <!-- 2FA Form -->
+        <form method="POST" action="{{ url_for('two_factor') }}">
+            <label for="code">Enter the code:</label>
+            <input type="text" name="code" id="code" required placeholder="6-digit code">
+            <button type="submit">Verify</button>
+        </form>
+
+        <!-- Resend Code Form -->
+        <form method="POST" action="{{ url_for('resend_2fa_code') }}">
+            <button type="submit" class="resend-button">Resend Code</button>
+        </form>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="flash {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Back to Home Button -->
+    <a href="{{ url_for('home') }}" class="back-to-home">Back to Home</a>
+</body>
+</html>

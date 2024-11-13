@@ -1,3 +1,5 @@
+import random
+import string
 import uuid
 from flask import Flask, session, request, redirect, url_for, render_template_string, render_template, flash
 from flask_session import Session
@@ -5,10 +7,14 @@ import redis
 from pymongo.mongo_client import MongoClient
 from models import User  # Import the User model
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from functools import wraps
 from flask_mail import Mail, Message
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,8 +22,14 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 
+limiter = Limiter(
+    key_func=get_remote_address,
+    storage_uri="redis://localhost:6379"
+)
+limiter.init_app(app)
+
 # MongoDB Configuration
-uri = "mongodb+srv://mattreileydeveloper:NewPassword@cluster0.ueh7b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"  # Make sure this matches the MongoDB URI in .env
+uri = os.getenv('MONGO_URI')  # Make sure this matches the MongoDB URI in .env
 client = MongoClient(uri)
 
 # Test the MongoDB connection
@@ -71,9 +83,20 @@ def send_verification_email(user_email, verification_link):
     msg.body = f'Please verify your email by clicking the following link: {verification_link}'
     mail.send(msg)
 
-# Generate a verification token for a new user
 def generate_verification_token():
     return str(uuid.uuid4())
+
+def generate_2fa_code():
+    code = random.randint(100000, 999999)
+    expiration_time = datetime.utcnow() + timedelta(minutes=5)  # Set code to expire in 5 minutes
+    return code, expiration_time
+
+def send_2fa_email(user_email, code):
+    msg = Message("Your 2FA Code",
+                  sender='redisemailer@gmail.com',
+                  recipients=[user_email])
+    msg.body = f"Your 2FA code is {code}."
+    mail.send(msg)
 
 def send_reset_email(email, reset_link):
     msg = Message(
@@ -84,6 +107,11 @@ def send_reset_email(email, reset_link):
     msg.body = f'Please use the following link to reset your password: {reset_link}'
     mail.send(msg)
  
+def is_2fa_code_expired():
+    expiration_time = session.get('2fa_expiration')
+    if expiration_time and datetime.now(timezone.utc) > expiration_time:
+        return True
+    return False
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -143,6 +171,7 @@ def home():
     return render_template('home.html')
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def login():
     if 'username' in session:
         return redirect(url_for('home'))  # Redirect to homepage if already logged in
@@ -154,14 +183,72 @@ def login():
         user = User.find_by_username(username)
 
         if user and user.is_verified and user.check_password(password):
-            session['username'] = username
+            session['temp_username'] = username
+            session['temp_email'] = user.email
+            code, expiration = generate_2fa_code()
+            session['2fa_code'] = code
+            session['2fa_code_expiration'] = expiration.isoformat()
+
+            # Setting expiration time for the 2FA code
+            current_utc_time = datetime.now(timezone.utc)
+            expiration_time = current_utc_time + timedelta(minutes=5)
+            session['2fa_expiration'] = expiration_time.isoformat()
+
+            send_2fa_email(user.email, code)
+            flash("A 2FA code has been sent to your email.", "info")
+            return redirect(url_for('two_factor'))
+
+        flash("Invalid credentials. Please try again.", "error")
+    return render_template('login.html')
+
+@app.route('/two_factor', methods=['GET', 'POST'])
+def two_factor():
+    if 'temp_username' not in session:
+        return redirect(url_for('login'))
+    
+    expiration_str = session.get('2fa_code_expiration')
+    if expiration_str:
+        # Convert expiration time from the session to a timezone-aware datetime
+        expiration_time = datetime.fromisoformat(expiration_str).astimezone(timezone.utc)
+        
+        # Compare timezone-aware datetimes
+        if datetime.now(timezone.utc) > expiration_time:
+            flash("The 2FA code has expired. Please request a new one.", "error")
+            return redirect(url_for('resend_2fa_code'))
+
+    if request.method == 'POST':
+        code = request.form['code']
+        if code == str(session.get('2fa_code')):
+            # Clear session variables after successful 2FA
+            session['username'] = session.pop('temp_username')
+            session.pop('2fa_code', None)
+            session.pop('2fa_code_expiration', None)
             flash("Login successful!", "success")
             return redirect(url_for('profile'))
-        
-        flash("Invalid credentials. Please try again.", "error")
-        return redirect(url_for('login'))
+        else:
+            flash("Incorrect 2FA code. Please try again.", "error")
 
-    return render_template('login.html')
+    return render_template('two_factor.html')
+
+
+@app.route('/resend_2fa_code', methods=['POST'])
+def resend_2fa_code():
+    # Generate a new 2FA code
+    new_code = ''.join(random.choices(string.digits, k=6))
+    session['2fa_code'] = new_code
+    
+    # Set expiration time (e.g., 5 minutes from now)
+    expiration_time = datetime.now() + timedelta(minutes=5)
+    session['2fa_code_expiration'] = expiration_time.isoformat()
+    
+    # Dummy email for this example, replace with the actual user's email
+    email = session.get('temp_email', 'user@example.com')
+    
+    # Send the new code via email (replace with actual email-sending logic)
+    send_2fa_email(email, new_code)
+    
+    flash("A new 2FA code has been sent to your email.", "success")
+    return redirect(url_for('two_factor'))
 
 @app.route('/profile')
 @login_required
@@ -232,6 +319,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', users=users)
 
 @app.route('/delete_user/<username>', methods=['POST'])
+@limiter.limit("7 per minute")
 def delete_user(username):
     """Delete a user by username."""
     logged_in_username = session.get('username')  # Get logged-in user's username
@@ -269,8 +357,6 @@ def delete_user(username):
     if logged_in_user.username == username:
         return redirect(url_for('logout'))  # Redirect to logout if the user deleted their own account
     return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard after admin deletion
-
-
 
 if __name__ == '__main__':
     print("Mongo instance in User model:", User.mongo)
