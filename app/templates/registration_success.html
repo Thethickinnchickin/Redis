@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Successful</title>
+    <link rel="stylesheet" href="/static/styles.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+    <div class="container success-message">
+        <h2>Registration Successful!</h2>
+        <p>Thank you for registering. A verification email has been sent to <strong>{{ email }}</strong>. Please check your inbox to verify your account.</p>
+        <p>If you don’t receive the email within a few minutes, check your spam or junk folder.</p>
+        <a href="{{ url_for('login') }}" class="button">Go to Login</a>
+    </div>
+</body>
+</html>

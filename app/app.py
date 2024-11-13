@@ -75,6 +75,16 @@ def send_verification_email(user_email, verification_link):
 def generate_verification_token():
     return str(uuid.uuid4())
 
+def send_reset_email(email, reset_link):
+    msg = Message(
+        'Password Reset Request',
+        sender='redisemailer@gmail.com',
+        recipients=[email]
+    )
+    msg.body = f'Please use the following link to reset your password: {reset_link}'
+    mail.send(msg)
+ 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
@@ -86,12 +96,20 @@ def register():
     
     # Check if the username already exists
     if User.find_by_username(username):
-        return "Username already exists. Please choose a different one.", 400
+        flash("Username already exists. Please choose a different one.", "error")
+        return redirect(url_for('register'))
+    
+    # Check if the username already exists
+    if User.find_by_email(email):
+        flash("Email already exists. Please login", "error")
+        return redirect(url_for('register'))
+    
     
     # Create user instance and generate a password hash
     user = User(username, password)
     user.email = email  # Set the email
     user.is_verified = False  # Initially the user is not verified
+    user.role = 'admin'
     
     # Generate verification token and save it to the user
     verification_token = generate_verification_token()  # Generate token
@@ -104,7 +122,7 @@ def register():
     verification_link = url_for('verify_email', token=verification_token, _external=True)
     send_verification_email(email, verification_link)
     
-    return "Registration successful! Please check your email to verify your account.", 200
+    return render_template('registration_success.html')
 
 @app.route('/verify/<token>')
 def verify_email(token):
@@ -157,16 +175,102 @@ def logout():
     flash("You have logged out successfully.", "info")
     return redirect(url_for('home'))
 
-@app.route('/test_mongo')
-def test_mongo():
-    try:
-        # Test accessing the MongoDB instance and check for data in the 'users' collection
-        if User.mongo["users"].find_one():  # Use the 'users' collection from the MongoDB instance
-            return "MongoDB connection successful!"
-        else:
-            return "Connected to MongoDB, but no data in 'users' collection."
-    except Exception as e:
-        return f"Error connecting to MongoDB: {e}"
+@app.route('/reset-password', methods=['GET', 'POST'])
+def request_password_reset():
+    if request.method == 'GET':
+        return render_template('reset_password_request.html')
+
+    email = request.form['email']
+    user = User.find_by_email(email)
+
+    if not user:
+        flash("No account found with that email.", "error")
+        return redirect(url_for('request_password_reset'))
+    
+    # Generate and save the reset token
+    user.generate_reset_token()
+    user.save_to_db()
+
+    # Send the reset email
+    reset_link = url_for('reset_password', token=user.reset_token, _external=True)
+    send_reset_email(user.email, reset_link)
+    flash("Check your email for the password reset link.", "info")
+    return redirect(url_for('login'))
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.find_by_reset_token(token)
+    if not user:
+        flash("Invalid or expired token.", "error")
+        return redirect(url_for('request_password_reset'))
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        user.salt = os.urandom(16)  # Generate a new salt
+        user.password_hash = user.generate_scrypt_hash(new_password)
+        user.reset_token = None  # Clear the token after reset
+        user.token_expiry = None
+        user.save_to_db()
+        
+        flash("Your password has been updated. You can now log in.", "success")
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
+
+@app.route('/admin_dashboard')
+@login_required
+def admin_dashboard():
+    # Check if the logged-in user is an admin
+    username = session.get('username')
+    user = User.find_by_username(username)
+    if user.role != 'admin':
+        flash("You do not have permission to access this page", "error")
+        return redirect(url_for('home'))  # Redirect to a non-admin page
+
+    # Retrieve all users (or filtered users if you need)
+    users = User.find_by_role('user')  # You can add more roles or get all users
+    return render_template('admin_dashboard.html', users=users)
+
+@app.route('/delete_user/<username>', methods=['POST'])
+def delete_user(username):
+    """Delete a user by username."""
+    logged_in_username = session.get('username')  # Get logged-in user's username
+    
+    # Fetch the logged-in user from the database
+    logged_in_user = User.find_by_username(logged_in_username)
+    
+    if not logged_in_user:
+        flash("You must be logged in to delete an account", "error")
+        return redirect(url_for('login'))  # Redirect to the login page if user is not logged in
+    
+    # Check if the logged-in user is trying to delete their own account or is an admin
+    if logged_in_user.role != 'admin' and logged_in_user.username != username:
+        # If the user is not an admin and is not deleting their own account
+        flash("You do not have permission to delete another user's account", "error")
+        return redirect(url_for('home'))  # Redirect to a non-admin page
+    
+    # Fetch the user to delete using the username passed in the URL
+    user_to_delete = User.find_by_username(username)
+    
+    if user_to_delete:
+        try:
+            # Allow the user to delete their own account or admin to delete any user
+            user_to_delete.delete_from_db()
+            if logged_in_user.username == username:
+                flash("Your account has been deleted successfully", "success")
+            else:
+                flash(f"User {username} deleted successfully", "success")
+        except ValueError as e:
+            flash(str(e), "danger")
+    else:
+        flash(f"User with username {username} not found.", "danger")
+    
+    # Redirect to the appropriate page
+    if logged_in_user.username == username:
+        return redirect(url_for('logout'))  # Redirect to logout if the user deleted their own account
+    return redirect(url_for('admin_dashboard'))  # Redirect to the admin dashboard after admin deletion
+
+
 
 if __name__ == '__main__':
     print("Mongo instance in User model:", User.mongo)
