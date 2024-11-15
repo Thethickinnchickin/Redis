@@ -14,10 +14,15 @@
     {% block content %}
         <div class="container">
             <h1>Log In</h1>
-            <form method="POST" action="{{ url_for('login') }}">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="submit" value="Log In">
+            <form method="POST" action="/login">
+                {{ form.hidden_tag() }}  <!-- This includes the CSRF token -->
+                {{ form.username.label }} 
+                {{ form.username(size=32) }}  <!-- Render username input -->
+                
+                {{ form.password.label }}
+                {{ form.password(size=32) }}  <!-- Render password input -->
+            
+                <button type="submit">Login</button>
             </form>
             <p>Don’t have an account? <a href="{{ url_for('register') }}">Register</a></p>
             <p>Forgot Password? <a href="{{ url_for('request_password_reset') }}">Reset Password</a></p>

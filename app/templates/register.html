@@ -10,15 +10,36 @@
     {% extends 'flash.html' %}
 
     {% block title %}Register{% endblock %}
-    
+
     {% block content %}
         <div class="container">
             <h1>Create Account</h1>
             <form method="POST" action="{{ url_for('register') }}">
-                <input type="text" name="username" placeholder="Username" required>
-                <input type="email" name="email" placeholder="Email" required>
-                <input type="password" name="password" placeholder="Password" required>
-                <input type="submit" value="Register">
+                {{ form.hidden_tag() }} <!-- CSRF token included here -->
+
+                <div>
+                    {{ form.username.label }} 
+                    {{ form.username(class="input-field", placeholder="Username") }}
+                </div>
+
+                <div>
+                    {{ form.email.label }}
+                    {{ form.email(class="input-field", placeholder="Email") }}
+                </div>
+
+                <div>
+                    {{ form.password.label }}
+                    {{ form.password(class="input-field", placeholder="Password") }}
+                </div>
+
+                <div>
+                    {{ form.confirm_password.label }}
+                    {{ form.confirm_password(class="input-field", placeholder="Confirm Password") }}
+                </div>
+
+                <div>
+                    <input type="submit" value="Register">
+                </div>
             </form>
             <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
         </div>
