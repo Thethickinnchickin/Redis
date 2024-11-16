@@ -10,8 +10,8 @@ services:
 
   flask-app:
     build:
-      context: app
-      dockerfile: app/Dockerfile
+      context: /app
+      dockerfile: /app/Dockerfile
     container_name: flask-app
     # expose:
     #   - "5000"  # Expose port to the network (not mapped to the host)
