@@ -4,8 +4,7 @@ services:
     name: redis
     env: docker
     docker:
-      image: redis:latest
-      buildDir: ./redis
+      image: redis:latest  # Directly use the image without a build directory
     plan: free
 
   flask-app:
@@ -13,8 +12,8 @@ services:
     name: flask-app
     env: docker
     docker:
-      buildDir: ./app
-      dockerfilePath: ./app/Dockerfile
+      buildDir: ./app  # Ensure this points to the correct directory with your Dockerfile
+      dockerfilePath: ./app/Dockerfile  # Path to the Flask app's Dockerfile
     plan: free
     envVars:
       - key: REDIS_HOST
@@ -31,7 +30,7 @@ services:
     name: nginx
     env: docker
     docker:
-      image: nginx:latest
-      buildDir: ./nginx
-      dockerfilePath: ./nginx/Dockerfile
+      image: nginx:latest  # Directly use the image without a build directory
+      buildDir: ./nginx  # This is needed if you're building a custom Nginx setup, but if you're not customizing, omit this line
+      dockerfilePath: ./nginx/Dockerfile  # Path to your Nginx Dockerfile if you have one
     plan: free
