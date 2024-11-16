@@ -4,31 +4,34 @@ services:
     name: redis
     env: docker
     docker:
-      image: redis:latest  # Pull the official Redis image from Docker Hub
+      image: redis:latest  # Use the official Redis image
     plan: free
 
-  # flask-app:
-  #   type: web
-  #   name: flask-app
-  #   env: docker
-  #   docker:
-  #     buildDir: ./app  # This points to the directory with the Dockerfile for your Flask app
-  #     dockerfilePath: ./app/Dockerfile  # Path to your Flask app's Dockerfile
-  #   plan: free
-  #   envVars:
-  #     - key: REDIS_HOST
-  #       value: redis
-  #     - key: REDIS_PORT
-  #       value: 6379
-  #     - key: FLASK_RUN_HOST
-  #       value: 0.0.0.0
-  #     - key: FLASK_RUN_PORT
-  #       value: 5000
+  flask-app:
+    type: web
+    name: flask-app
+    env: docker
+    docker:
+      buildDir: ./app  # Path to your Flask app's Dockerfile
+      dockerfilePath: ./app/Dockerfile  # Make sure to provide the correct Dockerfile path
+    plan: free
+    envVars:
+      - key: REDIS_HOST
+        value: redis
+      - key: REDIS_PORT
+        value: 6379
+      - key: FLASK_RUN_HOST
+        value: 0.0.0.0
+      - key: FLASK_RUN_PORT
+        value: 5000
 
   nginx:
     type: web
     name: nginx
     env: docker
     docker:
-      image: nginx:latest  # Pull the official Nginx image from Docker Hub
+      image: nginx:latest  # Use the official Nginx image
     plan: free
+    envVars:
+      - key: FLASK_APP_URL
+        value: flask-app
