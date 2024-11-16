@@ -13,8 +13,8 @@ services:
       context: ./app
       dockerfile: Dockerfile
     container_name: flask-app
-    expose:
-      - "5000"  # Expose port to the network (not mapped to the host)
+    # expose:
+    #   - "5000"  # Expose port to the network (not mapped to the host)
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
