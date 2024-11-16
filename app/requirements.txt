@@ -9,4 +9,5 @@ Flask-PyMongo==2.3.0            # For integrating Flask with MongoDB
 Flask-WTF==1.2.2                # For Flask form handling with CSRF protection
 WTForms==3.2.1                  # For creating and validating forms
 email-validator
+gunicorn
 
