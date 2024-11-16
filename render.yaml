@@ -1,0 +1,37 @@
+services:
+  redis:
+    type: web
+    name: redis
+    env: docker
+    docker:
+      image: redis:latest
+      buildDir: ./redis
+    plan: free
+
+  flask-app:
+    type: web
+    name: flask-app
+    env: docker
+    docker:
+      buildDir: ./flask
+      dockerfilePath: ./flask/Dockerfile
+    plan: free
+    envVars:
+      - key: REDIS_HOST
+        value: redis
+      - key: REDIS_PORT
+        value: 6379
+      - key: FLASK_RUN_HOST
+        value: 0.0.0.0
+      - key: FLASK_RUN_PORT
+        value: 5000
+
+  nginx:
+    type: web
+    name: nginx
+    env: docker
+    docker:
+      image: nginx:latest
+      buildDir: ./nginx
+      dockerfilePath: ./nginx/Dockerfile
+    plan: free
