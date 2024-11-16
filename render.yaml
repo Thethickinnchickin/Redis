@@ -12,8 +12,8 @@ services:
     name: flask-app
     env: docker
     docker:
-      buildDir: /app  # This points to the directory with the Dockerfile for your Flask app
-      dockerfilePath: /app/Dockerfile  # Path to your Flask app's Dockerfile
+      buildDir: ./app  # This points to the directory with the Dockerfile for your Flask app
+      dockerfilePath: ./app/Dockerfile  # Path to your Flask app's Dockerfile
     plan: free
     envVars:
       - key: REDIS_HOST
