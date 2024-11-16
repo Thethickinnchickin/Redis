@@ -1,2 +1,12 @@
-flask
-redis
+Flask==3.0.3                   # Core Flask framework
+flask-session==0.8.0            # For server-side session handling
+redis==5.0.0                    # Redis client for Python
+pymongo==4.5.0                  # MongoDB client
+python-dotenv==1.0.0            # For loading environment variables
+Flask-Mail==0.9.1               # For sending emails
+Flask-Limiter==2.9.2            # For rate limiting
+Flask-PyMongo==2.3.0            # For integrating Flask with MongoDB
+Flask-WTF==1.2.2                # For Flask form handling with CSRF protection
+WTForms==3.2.1                  # For creating and validating forms
+email-validator
+

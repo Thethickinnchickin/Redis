@@ -29,7 +29,6 @@ load_dotenv()
 app = Flask(__name__)
 
 csrf = CSRFProtect(app)
-#csrf.init_app(app, exempt_methods=["GET", "HEAD", "OPTIONS", "TRACE"])
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG,
@@ -39,12 +38,12 @@ logger = logging.getLogger(__name__)
 # Initialize Limiter with Redis storage for rate limiting
 limiter = Limiter(
     key_func=get_remote_address,
-    storage_uri="redis://localhost:6379"
+    storage_uri=f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}"
 )
 limiter.init_app(app)
 
 # MongoDB Configuration
-uri = os.getenv('MONGO_URI')  # Make sure this matches the MongoDB URI in .env
+uri = os.getenv('MONGO_URI')  # Ensure MongoDB URI is in .env
 if not uri:
     raise ValueError("Mongo URI not found in environment variables!")
 
@@ -55,7 +54,7 @@ mongo = PyMongo(app)
 # Test the MongoDB connection
 try:
     client.admin.command('ping')
-    logger.info("Pinged your deployment. You successfully connected to MongoDB!")
+    logger.info("Pinged your deployment. Successfully connected to MongoDB!")
 except Exception as e:
     logger.error(f"Error connecting to MongoDB: {e}")
 
@@ -63,29 +62,41 @@ except Exception as e:
 User.set_mongo(client)  # Pass the MongoClient instance to User
 
 # Redis Configuration for Sessions
+try:
+    session_redis = redis.StrictRedis(
+        host=os.getenv('REDIS_HOST', 'localhost'),
+        port=int(os.getenv('REDIS_PORT', 6379)),
+        password=os.getenv('REDIS_PASSWORD', None)
+    )
+    session_redis.ping()  # Test connection
+    logger.info("Successfully connected to Redis!")
+except redis.ConnectionError as e:
+    logger.error(f"Redis connection error: {e}")
+    raise e
+
 app.config['SESSION_TYPE'] = 'redis'
 app.config['SESSION_PERMANENT'] = False
 app.config['SESSION_USE_SIGNER'] = True
 app.config['SESSION_KEY_PREFIX'] = 'flask_session:'
-app.config['SESSION_REDIS'] = redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), port=6379)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)  # Session expiration
-app.config['SECRET_KEY'] = os.urandom(24)
+app.config['SESSION_REDIS'] = session_redis
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
 
 # Secure the session cookie:
-app.config['SESSION_COOKIE_SECURE'] = False  # Ensures the cookie is sent over HTTPS only
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Ensures the cookie cannot be accessed via JavaScript
-app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # Helps prevent CSRF attacks (options: 'Strict', 'Lax', 'None')
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Protect from JavaScript access
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # CSRF protection
 
 # Gmail Configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'redisemailer@gmail.com'  # replace with your Gmail address
-app.config['MAIL_PASSWORD'] = 'crok iqis rimk hsdh'  # replace with your app password
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')  # Gmail address from .env
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')  # App password from .env
 app.config['PREFERRED_URL_SCHEME'] = 'https'
 mail = Mail(app)
 
-# Initialize the Session extension
+# Flask Session
 Session(app)
 
 # Login required decorator
@@ -347,12 +358,31 @@ def reset_password(token):
         user.password_hash = user.generate_scrypt_hash(new_password)
         user.reset_token = None  # Clear the token after reset
         user.token_expiry = None
-        user.save_to_db()
-        
+
+        # Preserve the existing role during updates
+        existing_user_data = user.mongo.db.users.find_one({"username": user.username})
+        user.role = existing_user_data.get("role", "user")  # Ensure role is preserved
+
+        # Update user in database
+        user_data = {
+            "username": user.username,
+            "password_hash": user.password_hash,
+            "salt": user.salt.hex(),
+            "email": user.email,
+            "verification_token": user.verification_token,
+            "is_verified": user.is_verified,
+            "reset_token": user.reset_token,
+            "token_expiry": user.token_expiry,
+            "role": user.role,  # Explicitly set the role
+        }
+        user.mongo.db.users.update_one({"username": user.username}, {"$set": user_data})
+
         flash("Your password has been updated. You can now log in.", "success")
         return redirect(url_for('login'))
 
+
     return render_template('reset_password.html', form=form, token=token)
+
 
 @app.route('/admin_dashboard')
 @login_required

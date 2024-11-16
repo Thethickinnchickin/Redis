@@ -99,7 +99,8 @@ class User:
                 email=user_data["email"],
                 salt=salt,
                 is_verified=user_data["is_verified"],
-                verification_token=user_data.get("verification_token")
+                verification_token=user_data.get("verification_token"),
+                role=user_data.get("role")
             )
             user.password_hash = user_data["password_hash"]
             return user
@@ -117,6 +118,7 @@ class User:
             user = User(username=user_data["username"], email=user_data["email"], salt=salt, is_verified=user_data["is_verified"])
             user.password_hash = user_data["password_hash"]  # Set password_hash separately
             user.verification_token = user_data["verification_token"]  # Set verification token
+            user.role = user_data["role"]
             return user
         return None
     
@@ -163,9 +165,22 @@ class User:
     def find_by_reset_token(cls, token):
         user_data = cls.mongo.db.users.find_one({'reset_token': token})
         if user_data:
-            user_data.pop('_id', None)  # Remove '_id' if it exists
-            return cls(**user_data)  # Initialize user with data if token is valid
+            print(f"User data retrieved: {user_data}")  # Debug: Ensure 'role' exists
+            user_data.pop('_id', None)
+            return cls(
+                username=user_data.get('username'),
+                password_hash=user_data.get('password_hash'),
+                salt=bytes.fromhex(user_data['salt']) if user_data.get('salt') else None,
+                email=user_data.get('email'),
+                verification_token=user_data.get('verification_token'),
+                is_verified=user_data.get('is_verified', False),
+                reset_token=user_data.get('reset_token'),
+                token_expiry=user_data.get('token_expiry'),
+                role=user_data.get('role', 'user')  # Default to 'user' if missing
+            )
         return None
+
+
 
     def generate_reset_token(self):
         """Generate a reset token with a 1-hour expiration."""
