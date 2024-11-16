@@ -1,24 +1,25 @@
-# Dockerfile for Flask Application
+# Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
-# Set the working directory in the container
+# Set the working directory to /app
 WORKDIR /app
 
-# Copy requirements.txt to the working directory
-COPY requirements.txt /app/
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Install any dependencies
+# Install any needed dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . /app/
+# Install Gunicorn
+RUN pip install gunicorn
 
-# Expose port 5000 for Flask
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Set environment variables for Flask
+# Define environment variable
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_RUN_PORT=5000
 
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
+# Run the application using gunicorn
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
