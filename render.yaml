@@ -13,8 +13,8 @@ services:
     name: flask-app
     env: docker
     docker:
-      buildDir: ./flask
-      dockerfilePath: ./flask/Dockerfile
+      buildDir: ./app
+      dockerfilePath: ./app/Dockerfile
     plan: free
     envVars:
       - key: REDIS_HOST
