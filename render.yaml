@@ -7,23 +7,23 @@ services:
       image: redis:latest  # Pull the official Redis image from Docker Hub
     plan: free
 
-  flask-app:
-    type: web
-    name: flask-app
-    env: docker
-    docker:
-      buildDir: ./app  # This points to the directory with the Dockerfile for your Flask app
-      dockerfilePath: ./app/Dockerfile  # Path to your Flask app's Dockerfile
-    plan: free
-    envVars:
-      - key: REDIS_HOST
-        value: redis
-      - key: REDIS_PORT
-        value: 6379
-      - key: FLASK_RUN_HOST
-        value: 0.0.0.0
-      - key: FLASK_RUN_PORT
-        value: 5000
+  # flask-app:
+  #   type: web
+  #   name: flask-app
+  #   env: docker
+  #   docker:
+  #     buildDir: ./app  # This points to the directory with the Dockerfile for your Flask app
+  #     dockerfilePath: ./app/Dockerfile  # Path to your Flask app's Dockerfile
+  #   plan: free
+  #   envVars:
+  #     - key: REDIS_HOST
+  #       value: redis
+  #     - key: REDIS_PORT
+  #       value: 6379
+  #     - key: FLASK_RUN_HOST
+  #       value: 0.0.0.0
+  #     - key: FLASK_RUN_PORT
+  #       value: 5000
 
   nginx:
     type: web
