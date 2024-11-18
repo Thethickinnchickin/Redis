@@ -319,7 +319,12 @@ def logout():
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', username=session['username'])
+    username = session.get('username')
+    if not username:
+        flash("Your session has expired. Please log in again.", "error")
+        return redirect(url_for('login'))
+    return render_template('profile.html', username=username)
+
 
 @app.route('/reset-password', methods=['GET', 'POST'])
 def request_password_reset():
