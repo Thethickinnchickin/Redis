@@ -1,3 +1,6 @@
 [services]
 flask-app = { compose_service = "flask-app", compose_file = "docker-compose.yml" }
 redis = { compose_service = "redis", compose_file = "docker-compose.yml" }
+[build]
+  engine = "docker"
+  dockerfile = "./app/Dockerfile"
