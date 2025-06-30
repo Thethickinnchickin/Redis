@@ -1,0 +1,11 @@
+[phases.setup]
+pkgs = ["python310", "python310Packages.pip"]
+
+[phases.install]
+commands = ["pip install --no-cache-dir -r requirements.txt"]
+
+[phases.build]
+commands = []
+
+[phases.start]
+commands = ["gunicorn -b 0.0.0.0:5000 app:app"]
