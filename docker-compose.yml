@@ -10,7 +10,7 @@ services:
 
   web:
     build:
-      context: ./app
+      context: .
       dockerfile: Dockerfile
     container_name: flask-app
     expose:
