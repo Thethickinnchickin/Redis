@@ -135,7 +135,8 @@ def logout():
 @bp.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html', username=session['username'])
+    form = DeleteUserForm()
+    return render_template('profile.html', username=session['username'], form=form)
 
 @bp.route('/reset-password', methods=['GET', 'POST'])
 def request_password_reset():
