@@ -17,8 +17,8 @@
         <a href="{{ url_for('routes.home') }}">Home</a>
         <a href="{{ url_for('routes.logout') }}">Log Out</a>
 
-        <form action="{{ url_for('routes.delete_user', username=session['username']) }}" method="POST" style="margin-top: 20px;">
-            {{ csrf_token() }}
+        <form method="POST" action="{{ url_for('routes.delete_user', username=session['username']) }}">
+            {{ form.hidden_tag() }}
             <button type="submit" class="btn-delete">Delete Account</button>
         </form>
     </div>
