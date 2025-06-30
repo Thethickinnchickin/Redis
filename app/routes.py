@@ -203,11 +203,7 @@ def admin_dashboard():
 @bp.route('/delete_user/<username>', methods=['POST'])
 @limiter.limit("7 per minute")
 def delete_user(username):
-    form = DeleteUserForm()
-    if not form.validate_on_submit():
-        flash("Invalid request.", "error")
-        return redirect(url_for('routes.admin_dashboard'))
-
+    # Skip form validation here
     requester = User.find_by_username(session.get('username'))
     if not requester or (requester.role != 'admin' and requester.username != username):
         flash("Permission denied.", "error")
