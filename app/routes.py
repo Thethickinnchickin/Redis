@@ -41,7 +41,7 @@ def register():
         user.save_to_db()
 
         verification_link = url_for('routes.verify_email', token=user.verification_token, _external=True, _scheme='https')
-        send_verification_email(bp.app, email, verification_link)
+        send_verification_email(current_app, email, verification_link)
 
         flash("Check your email to verify your account.", "success")
         return render_template('registration_success.html')
@@ -80,7 +80,7 @@ def login():
             session['2fa_code_expiration'] = expiration.isoformat()
             session['2fa_expiration'] = expiration.isoformat()
 
-            send_2fa_email(bp.app, user.email, code)
+            send_2fa_email(current_app, user.email, code)
             flash("2FA code sent to your email.", "info")
             return redirect(url_for('routes.two_factor'))
 
@@ -120,7 +120,7 @@ def resend_2fa_code():
         code, expiration = generate_2fa_code()
         session['2fa_code'] = code
         session['2fa_code_expiration'] = expiration.isoformat()
-        send_2fa_email(bp.app, user.email, code)
+        send_2fa_email(current_app, user.email, code)
         flash("2FA code resent.", "info")
     return redirect(url_for('routes.two_factor'))
 
@@ -147,7 +147,7 @@ def request_password_reset():
         user.generate_reset_token()
         user.save_to_db()
         reset_link = url_for('routes.reset_password', token=user.reset_token, _external=True, _scheme='https')
-        send_reset_email(bp.app, user.email, reset_link)
+        send_reset_email(current_app, user.email, reset_link)
         flash("Check your email for the reset link.", "info")
         return redirect(url_for('routes.login'))
 
