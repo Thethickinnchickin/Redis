@@ -5,5 +5,8 @@ nixPkgs = ["python310", "python310Packages.pip"]
 workingDir = "app"
 commands = ["pip install --no-cache-dir -r requirements.txt"]
 
+[phases.build]
+commands = ["which gunicorn"]
+
 [start]
 cmd = "gunicorn -b 0.0.0.0:5000 app:app"
