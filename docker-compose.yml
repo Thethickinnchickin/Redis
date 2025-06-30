@@ -8,7 +8,7 @@ services:
     networks:
       - redis-net
 
-  flask-app:
+  web:
     build:
       context: ./app
       dockerfile: Dockerfile
