@@ -15,6 +15,9 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_pymongo import PyMongo
 from flask_wtf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 # Import models and forms using relative imports
 from app.models import User
@@ -30,6 +33,16 @@ def create_app():
 
     # CSRF protection
     csrf = CSRFProtect(app)
+
+    limiter.init_app(app)
+
+    # store limiter as global or attach to app
+    app.limiter = limiter
+
+    # import and register your routes
+    from app.routes import bp
+    app.register_blueprint(bp)
+
 
     # Logging setup
     logging.basicConfig(level=logging.DEBUG,

@@ -1,6 +1,6 @@
 from flask import (
     Blueprint, render_template, request, redirect, url_for,
-    session, flash
+    session, flash, current_app
 )
 from datetime import datetime, timezone
 from app import (
@@ -60,7 +60,7 @@ def verify_email(token):
     return redirect(url_for('routes.home'))
 
 @bp.route('/login', methods=['GET', 'POST'])
-@bp.app.limiter.limit("10 per minute")
+@current_app.limiter.limit("10 per minute")
 def login():
     if 'username' in session:
         return redirect(url_for('routes.home'))
@@ -198,7 +198,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', users=users, form=form)
 
 @bp.route('/delete_user/<username>', methods=['POST'])
-@bp.app.limiter.limit("7 per minute")
+@current_app.limiter.limit("7 per minute")
 def delete_user(username):
     form = DeleteUserForm()
     if not form.validate_on_submit():
