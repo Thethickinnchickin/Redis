@@ -18,7 +18,7 @@ bp = Blueprint('routes', __name__)
 
 @bp.route('/')
 def home():
-    return render_template('home.html')
+    return render_template('templates/home.html')
 
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
