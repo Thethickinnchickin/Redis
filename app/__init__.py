@@ -52,7 +52,7 @@ def create_app():
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
-
+    app.logger = logger
 
     # MongoDB setup
     uri = os.getenv('MONGO_URI')
@@ -84,36 +84,33 @@ def create_app():
         logger.error(f"Redis connection error: {e}")
         raise e
 
-    app.config['SESSION_TYPE'] = 'redis'
-    app.config['SESSION_PERMANENT'] = False
-    app.config['SESSION_USE_SIGNER'] = True
-    app.config['SESSION_KEY_PREFIX'] = 'flask_session:'
-    app.config['SESSION_REDIS'] = session_redis
-    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', os.urandom(24))
-    app.config['SESSION_COOKIE_SECURE'] = True
-    app.config['SESSION_COOKIE_HTTPONLY'] = True
-    app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+    app.config.update({
+        'SESSION_TYPE': 'redis',
+        'SESSION_PERMANENT': False,
+        'SESSION_USE_SIGNER': True,
+        'SESSION_KEY_PREFIX': 'flask_session:',
+        'SESSION_REDIS': session_redis,
+        'PERMANENT_SESSION_LIFETIME': timedelta(minutes=5),
+        'SECRET_KEY': os.getenv('SECRET_KEY', os.urandom(24)),
+        'SESSION_COOKIE_SECURE': True,
+        'SESSION_COOKIE_HTTPONLY': True,
+        'SESSION_COOKIE_SAMESITE': 'Strict'
+    })
 
     # Gmail setup
-    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['PREFERRED_URL_SCHEME'] = 'https'
+    app.config.update({
+        'MAIL_SERVER': 'smtp.gmail.com',
+        'MAIL_PORT': 587,
+        'MAIL_USE_TLS': True,
+        'MAIL_USERNAME': os.getenv('MAIL_USERNAME'),
+        'MAIL_PASSWORD': os.getenv('MAIL_PASSWORD'),
+        'PREFERRED_URL_SCHEME': 'https'
+    })
     mail = Mail(app)
-
-    Session(app)
-
-    # Attach helpers, extensions, logger, limiter, mail to app for easier access in routes
     app.mail = mail
-    app.logger = logger
-    app.limiter = limiter
 
-    # Import and register routes
-    from app import routes
-    app.register_blueprint(routes.bp)
+    # Flask-Session setup
+    Session(app)
 
     # Error logging setup (only if not debug)
     if not app.debug:
@@ -127,7 +124,6 @@ def create_app():
             return f"Internal server error: {error}", 500
 
     return app
-
 
 # Helper decorators and functions moved here if needed by routes
 
