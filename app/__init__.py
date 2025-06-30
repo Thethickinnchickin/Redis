@@ -20,6 +20,7 @@ from flask_limiter.util import get_remote_address
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
+from app.extensions import csrf
 
 # Create the limiter object globally (but don't init yet)
 from app.extensions import limiter
@@ -36,10 +37,10 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__, template_folder="templates", static_folder="static")
-
+    app.secret_key = os.environ.get("SECRET_KEY")
 
     # CSRF protection
-    csrf = CSRFProtect(app)
+    csrf.init_app(app)
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
