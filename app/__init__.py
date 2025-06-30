@@ -21,7 +21,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 # Create the limiter object globally (but don't init yet)
-limiter = Limiter(key_func=get_remote_address)
+from app.extensions import limiter
 
 
 # Import models and forms using relative imports
@@ -39,12 +39,12 @@ def create_app():
     # CSRF protection
     csrf = CSRFProtect(app)
 
-    # Rate limiter with Redis (configure first!)
+    # Configure limiter before init_app
     limiter.storage_uri = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}"
     limiter.init_app(app)
-    app.limiter = limiter  # make it available to current_app
+    app.limiter = limiter  # Optional: make it available to current_app
 
-    # import and register your routes
+    # Register Blueprints
     from app.routes import bp
     app.register_blueprint(bp)
 

@@ -12,6 +12,7 @@ from app.forms import (
     DeleteUserForm, LoginForm, TwoFactorForm,
     RegisterForm, RequestPasswordResetForm, ResetPasswordForm
 )
+from app.extensions import limiter
 
 bp = Blueprint('routes', __name__)
 
@@ -60,7 +61,7 @@ def verify_email(token):
     return redirect(url_for('routes.home'))
 
 @bp.route('/login', methods=['GET', 'POST'])
-@current_app.limiter.limit("10 per minute")
+@limiter.limit("10 per minute")
 def login():
     if 'username' in session:
         return redirect(url_for('routes.home'))
@@ -198,7 +199,7 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', users=users, form=form)
 
 @bp.route('/delete_user/<username>', methods=['POST'])
-@current_app.limiter.limit("7 per minute")
+@limiter.limit("7 per minute")
 def delete_user(username):
     form = DeleteUserForm()
     if not form.validate_on_submit():
