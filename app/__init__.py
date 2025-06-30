@@ -35,7 +35,8 @@ from app.forms import (
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__, static_folder="app/static", template_folder="/app/templates")
+    app = Flask(__name__, static_folder="static", template_folder="templates")
+
 
     # CSRF protection
     csrf = CSRFProtect(app)
