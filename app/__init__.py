@@ -35,7 +35,7 @@ from app.forms import (
 load_dotenv()
 
 def create_app():
-    app = Flask(__name__, static_folder="static", template_folder="templates")
+    app = Flask(__name__, template_folder="templates", static_folder="static")
 
 
     # CSRF protection
@@ -116,16 +116,21 @@ def create_app():
     # Flask-Session setup
     Session(app)
 
-    # Error logging setup (only if not debug)
-    if not app.debug:
-        from logging.handlers import RotatingFileHandler
-        handler = RotatingFileHandler('error.log', maxBytes=10000, backupCount=1)
-        handler.setLevel(logging.ERROR)
-        app.logger.addHandler(handler)
+    # # Error logging setup (only if not debug)
+    # if not app.debug:
+    #     from logging.handlers import RotatingFileHandler
+    #     handler = RotatingFileHandler('error.log', maxBytes=10000, backupCount=1)
+    #     handler.setLevel(logging.ERROR)
+    #     app.logger.addHandler(handler)
 
-        @app.errorhandler(500)
-        def internal_error(error):
-            return f"Internal server error: {error}", 500
+    #     @app.errorhandler(500)
+    #     def internal_error(error):
+    #         return f"Internal server error: {error}", 500
+        
+    @app.errorhandler(500)
+    def internal_error(e):
+        import traceback
+        return f"<pre>{traceback.format_exc()}</pre>", 500
 
     return app
 
