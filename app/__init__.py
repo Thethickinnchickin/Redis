@@ -21,6 +21,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.middleware.proxy_fix import ProxyFix
 from app.extensions import csrf
+from flask import current_app 
 
 # Create the limiter object globally (but don't init yet)
 from app.extensions import limiter
@@ -141,7 +142,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in session:
-            app.logger.warning("Unauthorized access attempt.")
+            current_app.logger.warning("Unauthorized access attempt.")
             return redirect(url_for('routes.login'))
         return f(*args, **kwargs)
     return decorated_function
