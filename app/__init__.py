@@ -39,12 +39,12 @@ def create_app():
     # CSRF protection
     csrf = CSRFProtect(app)
 
-    # Configure limiter before init_app
+    # Configure and init the limiter
     limiter.storage_uri = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}"
     limiter.init_app(app)
-    app.limiter = limiter  # Optional: make it available to current_app
+    app.limiter = limiter  # Optional convenience
 
-    # Register Blueprints
+    # Register routes
     from app.routes import bp
     app.register_blueprint(bp)
 
@@ -53,12 +53,6 @@ def create_app():
                         format='%(asctime)s - %(levelname)s - %(message)s')
     logger = logging.getLogger(__name__)
 
-    # Rate limiter with Redis
-    limiter = Limiter(
-        key_func=get_remote_address,
-        storage_uri=f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}"
-    )
-    limiter.init_app(app)
 
     # MongoDB setup
     uri = os.getenv('MONGO_URI')
