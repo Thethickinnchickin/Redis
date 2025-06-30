@@ -16,9 +16,9 @@
         <h1>Welcome, {{ username }}</h1>
         <p>This is your profile page.</p>
         <a href="{{ url_for('routes.home') }}">Home</a>
-        <a href="{{ url_for('logout') }}">Log Out</a>
+        <a href="{{ url_for('routes.logout') }}">Log Out</a>
     
-        <form action="{{ url_for('delete_user', username=session['username']) }}" method="POST" style="margin-top: 20px;">
+        <form action="{{ url_for('routes.delete_user', username=session['username']) }}" method="POST" style="margin-top: 20px;">
             <button type="submit" class="btn-delete">Delete Account</button>
         </form>
     </div>

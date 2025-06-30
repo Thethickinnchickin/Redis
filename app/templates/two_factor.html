@@ -12,7 +12,7 @@
         <p>Enter the code sent to your email to complete the login process.</p>
 
         <!-- 2FA Form -->
-        <form method="POST" action="{{ url_for('two_factor') }}">
+        <form method="POST" action="{{ url_for('routes.two_factor') }}">
             {{ form.hidden_tag() }} <!-- CSRF token included here -->
             <label for="code">Enter the code:</label>
             {{ form.code(class="input-field", required=True, placeholder="6-digit code") }}
@@ -20,7 +20,7 @@
         </form>
 
         <!-- Resend Code Form -->
-        <form method="POST" action="{{ url_for('resend_2fa_code') }}">
+        <form method="POST" action="{{ url_for('routes.resend_2fa_code') }}">
             {{ form.hidden_tag() }} <!-- CSRF token included here -->
             <button type="submit" class="resend-button">Resend Code</button>
         </form>
@@ -38,6 +38,6 @@
     </div>
 
     <!-- Back to Home Button -->
-    <a href="{{ url_for('home') }}" class="back-to-home">Back to Home</a>
+    <a href="{{ url_for('routes.home') }}" class="back-to-home">Back to Home</a>
 </body>
 </html>

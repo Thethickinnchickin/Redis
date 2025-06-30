@@ -28,7 +28,7 @@
                             <td>{{ user.role }}</td>
                             <td>
                                 {% if user.username != session['username'] %}
-                                    <form action="{{ url_for('delete_user', username=user.username) }}" method="POST" style="display:inline;">
+                                    <form action="{{ url_for('routes.delete_user', username=user.username) }}" method="POST" style="display:inline;">
                                         {{ form.hidden_tag() }}
                                         {{ form.submit(class="btn-delete") }}
                                     </form>
