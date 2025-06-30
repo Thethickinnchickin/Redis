@@ -1,4 +1,5 @@
-Flask==3.0.3                   # Core Flask framework
+Flask==3.0.3  
+gunicorn                 # Core Flask framework
 flask-session==0.8.0            # For server-side session handling
 redis==5.0.0                    # Redis client for Python
 pymongo==4.5.0                  # MongoDB client
@@ -9,4 +10,3 @@ Flask-PyMongo==2.3.0            # For integrating Flask with MongoDB
 Flask-WTF==1.2.2                # For Flask form handling with CSRF protection
 WTForms==3.2.1                  # For creating and validating forms
 email-validator
-gunicorn
