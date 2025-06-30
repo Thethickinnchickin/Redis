@@ -13,6 +13,8 @@ from app.forms import (
     RegisterForm, RequestPasswordResetForm, ResetPasswordForm
 )
 from app.extensions import limiter
+import os
+
 
 bp = Blueprint('routes', __name__)
 
