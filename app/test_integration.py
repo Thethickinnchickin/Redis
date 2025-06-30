@@ -1,5 +1,6 @@
+from . import app
 import pytest
-from app import app, mongo, User
+from app import mongo, User
 from flask import session
 import flask
 from flask_pymongo import PyMongo

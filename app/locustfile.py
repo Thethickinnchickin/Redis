@@ -4,7 +4,7 @@ import string
 from bs4 import BeautifulSoup
 from forms import DeleteUserForm, LoginForm, TwoFactorForm, RegisterForm, RequestPasswordResetForm, ResetPasswordForm
 from wtforms import Form, StringField, PasswordField 
-from app import app
+from . import app
 
 def random_string(length=8):
     return ''.join(random.choice(string.ascii_letters) for _ in range(length))
