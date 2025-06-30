@@ -224,3 +224,8 @@ def delete_user(username):
     if requester.username == username:
         return redirect(url_for('routes.logout'))
     return redirect(url_for('routes.admin_dashboard'))
+
+@bp.route('/ping')
+def ping():
+    return "pong"
+
