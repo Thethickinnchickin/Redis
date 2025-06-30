@@ -17,6 +17,11 @@ from flask_pymongo import PyMongo
 from flask_wtf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Create the limiter object globally (but don't init yet)
+limiter = Limiter(key_func=get_remote_address)
 
 
 # Import models and forms using relative imports
@@ -34,15 +39,14 @@ def create_app():
     # CSRF protection
     csrf = CSRFProtect(app)
 
+    # Rate limiter with Redis (configure first!)
+    limiter.storage_uri = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}"
     limiter.init_app(app)
-
-    # store limiter as global or attach to app
-    app.limiter = limiter
+    app.limiter = limiter  # make it available to current_app
 
     # import and register your routes
     from app.routes import bp
     app.register_blueprint(bp)
-
 
     # Logging setup
     logging.basicConfig(level=logging.DEBUG,
