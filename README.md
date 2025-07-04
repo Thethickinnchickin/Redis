@@ -3,7 +3,6 @@
 **Author:** Matthew Reiley  
 **Date:** November 18, 2024  
 
-[GitHub Source Code](#) | [Live Demo](#)
 
 ---
 
